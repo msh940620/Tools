@@ -47,6 +47,8 @@
 
 + (BOOL)checkEmail:(NSString *)email;
 
++ (BOOL)isBankCard:(NSString *)cardNumber;
+
 + (BOOL)checkPrice:(NSString*)price;
 
 + (BOOL)checkPriceNoLimit:(NSString*)price withLength:(NSInteger)length;
@@ -68,7 +70,7 @@
 + (NSString *)checkImgTypeWithata: (NSData *)data;
 
 /*
- * 根据身份证号确定性别 yes为男
+ * 根据身份证号确定性别 yes为女
  */
 +(BOOL)getIdentityCardSex:(NSString *)numberStr;
 
