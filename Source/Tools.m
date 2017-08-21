@@ -332,7 +332,7 @@
 }
 
 #pragma mark -- 16进制颜色值转化 rgb
-+ (UIColor *) colorWithHexString: (NSString *) stringToConvert
++ (UIColor *) colorWithHexString: (NSString *) stringToConvert withAlpha:(CGFloat)alpha
 {
     NSString *cString = [[stringToConvert stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] uppercaseString];
     // String should be 6 or 8 charactersif ([cString length] < 6) return [UIColor blackColor];
@@ -359,7 +359,7 @@
     return [UIColor colorWithRed:((float) r / 255.0f)
                            green:((float) g / 255.0f)
                             blue:((float) b / 255.0f)
-                           alpha:0.6f];
+                           alpha:alpha];
 }
 
 + (NSString *)checkImgTypeWithata: (NSData *)data{

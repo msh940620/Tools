@@ -65,7 +65,7 @@
 
 + (BOOL)isAllowedNotification;
 
-+ (UIColor *) colorWithHexString: (NSString *) stringToConvert;
++ (UIColor *) colorWithHexString: (NSString *) stringToConvert withAlpha:(CGFloat)alpha;
 
 + (NSString *)checkImgTypeWithata: (NSData *)data;
 
