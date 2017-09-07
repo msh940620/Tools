@@ -80,4 +80,6 @@
 
 + (NSString *)getIPAddress:(BOOL)preferIPv4;
 
++ (BOOL)judgeString:(NSString *)str containsString:(NSString *)str1;
+
 @end

@@ -584,4 +584,14 @@
     return NO;
 }
 
+
++ (BOOL)judgeString:(NSString *)str containsString:(NSString *)str1{
+    if([str rangeOfString:str1].location != NSNotFound)
+    {
+        return YES;
+    }
+    return NO;
+
+}
+
 @end
