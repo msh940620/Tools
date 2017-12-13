@@ -6,12 +6,24 @@
 //  Copyright © 2016年 Remionisce. All rights reserved.
 //
 
+
+////从路径中获得完整的文件名 （带后缀）
+//NSString *fileName = [filePath lastPathComponent];
+//
+////获得文件名 （不带后缀）
+//NSString *fileName1 = [filePath stringByDeletingPathExtension];
+//
+////获得文件的后缀名 （不带'.'）
+//NSString *suffix = [filePath pathExtension];
+
 #import "Tools.h"
 #import <CommonCrypto/CommonCrypto.h>
 #import "GHNSData+Base64.h"
 #import <ifaddrs.h>
 #import <arpa/inet.h>
 #import <net/if.h>
+#import <AVFoundation/AVFoundation.h>
+#import <MAMapKit/MAMapKit.h>
 
 #define IOS_CELLULAR    @"pdp_ip0"
 #define IOS_WIFI        @"en0"
@@ -84,6 +96,35 @@
         return NO;
     }
     return ![Tools isEmpty:dic[key]];
+}
+
++(BOOL)dicContainAllowSpace:(NSDictionary *)dic withKey:(NSString *)key{
+    if(![dic isKindOfClass:[NSDictionary class]]){
+        return NO;
+    }
+    
+    if(nil == dic[key]){
+        return NO;
+    }
+    return ![Tools dicValueIsEmpty:dic[key]];
+}
+
++ (BOOL)dicValueIsEmpty:(NSString*)string{
+    if (![string isKindOfClass:[NSString class]])
+        string = [string description];
+    if (string == nil || string == NULL)
+        return YES;
+    if ([string isKindOfClass:[NSNull class]])
+        return YES;
+    if ([string isEqualToString:@"(null)"])
+        return YES;
+    if ([string isEqualToString:@"(null)(null)"])
+        return YES;
+    if ([string isEqualToString:@"<null>"])
+        return YES;
+    
+    // return Default
+    return NO;
 }
 
 #pragma mark - check String is Empty
@@ -592,6 +633,129 @@
     }
     return NO;
 
+}
+
+
++ (void) getVideoPreViewImage:(NSURL *)url withBlock:(void (^)(UIImage* keyImg))block
+{
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        AVURLAsset *asset = [[AVURLAsset alloc] initWithURL:url options:nil];
+        AVAssetImageGenerator *gen = [[AVAssetImageGenerator alloc] initWithAsset:asset];
+        gen.appliesPreferredTrackTransform = YES;
+        CMTime time = CMTimeMakeWithSeconds(0.0, 600);
+        NSError *error = nil;
+        CMTime actualTime;
+        CGImageRef image = [gen copyCGImageAtTime:time actualTime:&actualTime error:&error];
+        UIImage *img = [[UIImage alloc] initWithCGImage:image];
+        CGImageRelease(image);        // 回到主线程
+        dispatch_async(dispatch_get_main_queue(), ^{
+            block(img);
+        });
+    });
+}
+
++(double)distanceBetweenOrderBy:(double) lat1 :(double) lat2 :(double) lng1 :(double) lng2{
+    
+    CLLocation *curLocation = [[CLLocation alloc] initWithLatitude:lat1 longitude:lng1];
+    
+    CLLocation *otherLocation = [[CLLocation alloc] initWithLatitude:lat2 longitude:lng2];
+    
+    double  distance  = [curLocation distanceFromLocation:otherLocation];
+    
+    return  distance;
+    
+}
+
++ (int)convertToByte:(NSString*)str {
+    int strlength = 0;
+    char* p = (char*)[str cStringUsingEncoding:NSUnicodeStringEncoding];
+    for (int i=0 ; i<[str lengthOfBytesUsingEncoding:NSUnicodeStringEncoding] ;i++) {
+        if (*p) {
+            p++;
+            strlength++;
+        }
+        else {
+            p++;
+        }
+    }
+    return strlength;
+}
+
++ (UIImage *)fixOrientation:(UIImage *)aImage {
+    
+    // No-op if the orientation is already correct
+    if (aImage.imageOrientation ==UIImageOrientationUp)
+        return aImage;
+    
+    // We need to calculate the proper transformation to make the image upright.
+    // We do it in 2 steps: Rotate if Left/Right/Down, and then flip if Mirrored.
+    CGAffineTransform transform =CGAffineTransformIdentity;
+    
+    switch (aImage.imageOrientation) {
+        case UIImageOrientationDown:
+        case UIImageOrientationDownMirrored:
+            transform = CGAffineTransformTranslate(transform, aImage.size.width, aImage.size.height);
+            transform = CGAffineTransformRotate(transform, M_PI);
+            break;
+            
+        case UIImageOrientationLeft:
+        case UIImageOrientationLeftMirrored:
+            transform = CGAffineTransformTranslate(transform, aImage.size.width,0);
+            transform = CGAffineTransformRotate(transform, M_PI_2);
+            break;
+            
+        case UIImageOrientationRight:
+        case UIImageOrientationRightMirrored:
+            transform = CGAffineTransformTranslate(transform, 0, aImage.size.height);
+            transform = CGAffineTransformRotate(transform, -M_PI_2);
+            break;
+        default:
+            break;
+    }
+    
+    switch (aImage.imageOrientation) {
+        case UIImageOrientationUpMirrored:
+        case UIImageOrientationDownMirrored:
+            transform = CGAffineTransformTranslate(transform, aImage.size.width,0);
+            transform = CGAffineTransformScale(transform, -1, 1);
+            break;
+            
+        case UIImageOrientationLeftMirrored:
+        case UIImageOrientationRightMirrored:
+            transform = CGAffineTransformTranslate(transform, aImage.size.height,0);
+            transform = CGAffineTransformScale(transform, -1, 1);
+            break;
+        default:
+            break;
+    }
+    
+    // Now we draw the underlying CGImage into a new context, applying the transform
+    // calculated above.
+    CGContextRef ctx =CGBitmapContextCreate(NULL, aImage.size.width, aImage.size.height,
+                                            CGImageGetBitsPerComponent(aImage.CGImage),0,
+                                            CGImageGetColorSpace(aImage.CGImage),
+                                            CGImageGetBitmapInfo(aImage.CGImage));
+    CGContextConcatCTM(ctx, transform);
+    switch (aImage.imageOrientation) {
+        case UIImageOrientationLeft:
+        case  UIImageOrientationLeftMirrored:
+        case UIImageOrientationRight:
+        case UIImageOrientationRightMirrored:
+            // Grr...
+            CGContextDrawImage(ctx,CGRectMake(0,0,aImage.size.height,aImage.size.width), aImage.CGImage);
+            break;
+            
+        default:
+            CGContextDrawImage(ctx,CGRectMake(0,0,aImage.size.width,aImage.size.height), aImage.CGImage);
+            break;
+    }
+    
+    // And now we just create a new UIImage from the drawing context
+    CGImageRef cgimg =CGBitmapContextCreateImage(ctx);
+    UIImage *img = [UIImage imageWithCGImage:cgimg];
+    CGContextRelease(ctx);
+    CGImageRelease(cgimg);
+    return img;
 }
 
 @end

@@ -82,4 +82,11 @@
 
 + (BOOL)judgeString:(NSString *)str containsString:(NSString *)str1;
 
++ (void) getVideoPreViewImage:(NSURL *)url withBlock:(void (^)(UIImage* keyImg))block;
+
++(double)distanceBetweenOrderBy:(double) lat1 :(double) lat2 :(double) lng1 :(double) lng2;
+
++ (int)convertToByte:(NSString*)str;
++ (UIImage *)fixOrientation:(UIImage *)aImage;
++(BOOL)dicContainAllowSpace:(NSDictionary *)dic withKey:(NSString *)key;
 @end
